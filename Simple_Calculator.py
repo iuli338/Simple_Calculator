@@ -159,6 +159,8 @@ def HandleSolve(values):
     window['textBox'].update(value=newText)
     print ("Result: "+newText)
     # Update expresion text
+    # Get rid of the '.0' at the end of the float for second number
+    Calculator.secondNumber = formatNumber(Calculator.secondNumber)
     Calculator.expresionText = Calculator.expresionText + " " + str(Calculator.secondNumber) + " ="
     window["expresion"].update(Calculator.expresionText)
     #
@@ -235,6 +237,9 @@ def HandleOperators(event,values):
     
     if Calculator.firstNumberEntered == False:
         Calculator.firstNumber = float(textBoxText.strip())
+        # Get rid of the '.0' at the end of the float for second number
+        formatNumber = lambda n: n if n%1 else int(n)
+        Calculator.firstNumber = formatNumber(Calculator.firstNumber)
         print("First number: "+str(Calculator.firstNumber))
         Calculator.firstNumberEntered = True
         ClearTextBox()
