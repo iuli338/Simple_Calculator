@@ -5,14 +5,7 @@ textFont = ('Helvetica',40)
 buttonsTextFont = ('Helvetica',32)
 smallTextFont = ('Helvetica',16)
 
-# Defining some colors
-# Needed for button colors
-PASTEL_RED = {
-    "bg" : (255, 105, 97)
-}
-
 # Defining the layout
-
 layout = [
     # Layout elements here
     [sg.Column([
@@ -47,20 +40,23 @@ layout = [
     [sg.Column([
         [
         sg.Button("/",key="/",size=(3,1),font=buttonsTextFont, button_color=("white",'gray23')),
-        sg.Button("C",key="C",size=(3,1),font=buttonsTextFont, button_color=("white", 'IndianRed1')),
+        sg.Button(".",key=".",size=(3,1),font=buttonsTextFont, button_color=("white", 'DarkSlateGray')),
         sg.Button("0",key="0",size=(3,1),font=buttonsTextFont),
-        sg.Button("<-",key="<-",size=(3,1),font=buttonsTextFont, button_color=("white",'DarkSlateGray'))],
+        sg.Button("N",key="N",size=(3,1),font=buttonsTextFont, button_color=("white",'DarkSlateGray'))],
         ],justification = 'center')
     ],
     [sg.Column([
-        [sg.Button("=",key="=",size=(6,1),font=buttonsTextFont, button_color=("black", 'SeaGreen1'))],
+        [
+        sg.Button("C",key="C",size=(3,1),font=buttonsTextFont, button_color=("white", 'IndianRed1')),    
+        sg.Button("=",key="=",size=(6,1),font=buttonsTextFont, button_color=("black", 'SeaGreen1')),
+        sg.Button("<-",key="<-",size=(3,1),font=buttonsTextFont, button_color=("white",'gray20'))],
         ],justification = 'center')
     ]
 ]
 
 ## CONSTANTS
 DIGITS = [str(i) for i in range(10)] # Define the digits list
-FUNCTIONS = ["C","<-","="]
+FUNCTIONS = ["C","<-","=",".","N"]
 OPERATORS = ["+","-","*","/"]
 MAX_LENGTH = 10
 WINDOW_SIZE = (400,600)
@@ -71,6 +67,7 @@ class Calculator:
     secondNumber:float = 0
     result:float = 0
     curOperator:str = ''
+    expresionText:str = ''
 
     # Sets to 'True' when the first number was entered
     firstNumberEntered:bool = False 
@@ -85,6 +82,9 @@ def ClearTextBox():
     window['textBox'].update(value='')
     if Calculator.resShowed == True:
         Calculator.resShowed = False
+        # Update expresion text
+        Calculator.expresionText = ''
+        window["expresion"].update(Calculator.expresionText)
     print("Input box cleared.")
 
 def HandleDigits(event,values):
@@ -118,12 +118,18 @@ def ResetVariables():
     Calculator.result = 0
     Calculator.resShowed = True
 
-def HandleSolve(event,values):
-    if Calculator.firstNumberEntered == False:
+def HandleSolve(values):
+    Calculator.textBoxText = values["textBox"]
+    if Calculator.textBoxText == '' or Calculator.textBoxText == '-':
+        print('Empty input.')
         return
 
-    Calculator.textBoxText = values["textBox"]
-    if Calculator.textBoxText == '':
+    if Calculator.resShowed:
+        print("Already solved.")
+        return
+
+    if Calculator.firstNumberEntered == False:
+        print("First number not entered yet.")
         return
 
     Calculator.secondNumber = float(Calculator.textBoxText.strip())
@@ -152,6 +158,10 @@ def HandleSolve(event,values):
     newText = str(Calculator.result)
     window['textBox'].update(value=newText)
     print ("Result: "+newText)
+    # Update expresion text
+    Calculator.expresionText = Calculator.expresionText + " " + str(Calculator.secondNumber) + " ="
+    window["expresion"].update(Calculator.expresionText)
+    #
     ResetVariables()
 
 def HandleFunctions(event,values):
@@ -169,9 +179,8 @@ def HandleFunctions(event,values):
         # If the result was already shown it will clear the text box
         if Calculator.resShowed == True:
             ClearTextBox()
-            Calculator.resShowed = False
             return
-        # Checks if it reached the max length
+        # Checks if it reached the min length
         if len(textBoxText) > 0:
             # Deletes the last character
             newText = textBoxText[:-1]
@@ -181,7 +190,36 @@ def HandleFunctions(event,values):
         else:
             print("No digit to clear.")
     elif event == "=":
-        HandleSolve(event,values)
+        HandleSolve(values)
+    elif event == "N":
+        # Minus sign
+        textBoxText = values["textBox"]
+        if Calculator.resShowed == True:
+            textBoxText = ''
+            ClearTextBox()
+        if textBoxText == '':
+            textBoxText = '-'
+            print("Negated.")
+        else:
+            if textBoxText[0] == '-':
+                textBoxText = textBoxText[1:]
+                print("Negated.")
+            else:
+                textBoxText = '-' + textBoxText
+                print("Denegated.")
+        window['textBox'].update(value=textBoxText)
+    elif event == ".":
+        # Dot
+        if Calculator.resShowed == True:
+            return
+        textBoxText = values["textBox"]
+        if textBoxText == '':
+            print("Empty input.")
+            return
+        if textBoxText[-1] in DIGITS and textBoxText.count('.') == 0:
+            textBoxText = textBoxText + '.'
+            window['textBox'].update(value=textBoxText)
+            print("Added dot.")
 
 def HandleOperators(event,values):
     if event not in OPERATORS:
@@ -191,7 +229,7 @@ def HandleOperators(event,values):
         return
 
     textBoxText = values["textBox"]
-    if textBoxText == '' and Calculator.firstNumberEntered == False:
+    if (textBoxText == '' and Calculator.firstNumberEntered == False) or textBoxText == '-':
         print('Empty input.')
         return
     
@@ -200,8 +238,14 @@ def HandleOperators(event,values):
         print("First number: "+str(Calculator.firstNumber))
         Calculator.firstNumberEntered = True
         ClearTextBox()
+        # Change expresion text
+        Calculator.expresionText = str(Calculator.firstNumber) + "  "
         
     Calculator.curOperator = event
+    # Update expresion text
+    Calculator.expresionText = Calculator.expresionText[:-1] + Calculator.curOperator
+    window["expresion"].update(Calculator.expresionText)
+    # DEBUG
     print("Operator changed to: "+event)
 
 ## EVENT LOOP
