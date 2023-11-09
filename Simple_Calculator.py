@@ -3,6 +3,7 @@ import PySimpleGUI as sg
 # Defining the font
 textFont = ('Helvetica',40)
 buttonsTextFont = ('Helvetica',32)
+smallTextFont = ('Helvetica',16)
 
 # Defining some colors
 # Needed for button colors
@@ -14,6 +15,10 @@ PASTEL_RED = {
 
 layout = [
     # Layout elements here
+    [sg.Column([
+        [sg.Text("Expresion: ",font=smallTextFont),sg.Text("",font=smallTextFont,key = "expresion")]
+        ], justification = 'center')
+    ],
     [sg.Input(" ",key="textBox", disabled=True, font=textFont, justification='right')],
     [sg.Column([
         [
@@ -58,7 +63,7 @@ DIGITS = [str(i) for i in range(10)] # Define the digits list
 FUNCTIONS = ["C","<-","="]
 OPERATORS = ["+","-","*","/"]
 MAX_LENGTH = 10
-WINDOW_SIZE = (400,560)
+WINDOW_SIZE = (400,600)
 
 ## OTHER VARIABLES
 class Calculator:
